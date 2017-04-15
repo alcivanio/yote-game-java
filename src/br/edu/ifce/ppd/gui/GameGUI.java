@@ -11,15 +11,16 @@ import java.awt.*;
 public class GameGUI {
 
     //component variables.
-    JPanel mainPanel;
-    GameHeader gameHeader;
-    JPanel gamePanel;
-    JPanel chatPanel;
+    JPanel      mainPanel;
+    GameHeader  gameHeader;
+    GameArea    gameArea;
+    GameChat    gameChat;
+
     GameGUI self = this;
 
     //screen size
     static int screenSizeWidth     = 684;
-    static int screenSizeHeight    = 524;
+    static int screenSizeHeight    = 542;
 
 
 
@@ -32,6 +33,7 @@ public class GameGUI {
         frame.setSize(screenSizeWidth, screenSizeHeight);
         frame.setResizable(false);
         frame.setVisible(true);
+
     }
 
     /*
@@ -49,6 +51,8 @@ public class GameGUI {
     private void setGraphicalElements() {
         setMainPanel();
         setHeaderElements();
+        setGameArea();
+        setGameChatArea();
     }
 
     //this aux method will help us to confiture stuff as layout and its elements (of the jpanel).
@@ -62,9 +66,18 @@ public class GameGUI {
 
 
     private void setHeaderElements() {
-
         gameHeader = new GameHeader();
         mainPanel.add(gameHeader.headerPanel);
+    }
+
+    private void setGameArea() {
+        gameArea = new GameArea();
+        mainPanel.add(gameArea.gamePanel);
+    }
+
+    private void setGameChatArea() {
+        gameChat = new GameChat();
+        mainPanel.add(gameChat.chatPanel);
     }
 
 

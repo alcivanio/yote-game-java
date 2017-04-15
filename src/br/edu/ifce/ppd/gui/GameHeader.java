@@ -5,6 +5,7 @@ import br.edu.ifce.ppd.util.MyFonts;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.geom.RoundRectangle2D;
 
 /**
  * Created by alcivanio on 12/04/17.
@@ -32,6 +33,7 @@ public class GameHeader {
 
     private void setGraphicalElements() {
         setHeaderElement();
+        setTurnElements();
         setUsedsElement();
         setCapturedsElement();
         setRightElements();
@@ -57,6 +59,40 @@ public class GameHeader {
         separator.setVisible(true);
 
         headerPanel.add(separator);
+    }
+
+    private void setTurnElements() {
+        setTurnCircle();
+        setDescTurnElements();
+    }
+
+    private void setTurnCircle() {
+        int posX    = 20;
+        int posY    = 20;
+        int sizeW   = 28;
+        int sizeH   = 28;
+
+        turnColor = new JPanel();
+        turnColor.setLayout(null);
+        turnColor.setBounds(posX, posY, sizeW, sizeH);
+        turnColor.setBackground(MyColors.blue);
+
+        headerPanel.add(turnColor);
+    }
+
+    private void setDescTurnElements() {
+        //position of this specific panel
+        int posX    = 14;
+        int sizeW   = 90;
+        int sizeH   = 25;
+
+        turnLabel = new JLabel();
+        turnLabel.setBounds(posX, bottomTextBaseY, sizeW, sizeH);
+        turnLabel.setText("It' your turn!");
+        turnLabel.setFont(MyFonts.systemDescription);
+        turnLabel.setForeground(MyColors.two);
+
+        headerPanel.add(turnLabel);//and finally adding it to the panel
     }
 
     private void setUsedsElement() {

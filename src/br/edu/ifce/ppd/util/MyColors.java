@@ -10,5 +10,8 @@ public class MyColors {
     public static Color six = Color.decode("#666666");
     public static Color two = Color.decode("#222222");
     public static Color ccc = Color.decode("#cccccc");
+    public static Color ddd = Color.decode("#dddddd");
+
+    public static Color blue = Color.decode("#0078FF");
 
 }
