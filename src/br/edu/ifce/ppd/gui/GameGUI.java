@@ -1,5 +1,9 @@
 package br.edu.ifce.ppd.gui;
 
+import br.edu.ifce.ppd.connection.ChatMessage;
+import br.edu.ifce.ppd.connection.CommunicationType;
+import br.edu.ifce.ppd.connection.GameConnection;
+import br.edu.ifce.ppd.connection.GameProtocol;
 import br.edu.ifce.ppd.util.MyColors;
 
 import javax.swing.*;
@@ -33,6 +37,8 @@ public class GameGUI {
         frame.setSize(screenSizeWidth, screenSizeHeight);
         frame.setResizable(false);
         frame.setVisible(true);
+
+        testesSocket();
 
     }
 
@@ -78,6 +84,21 @@ public class GameGUI {
     private void setGameChatArea() {
         gameChat = new GameChat();
         mainPanel.add(gameChat.chatPanel);
+    }
+
+    static void testesSocket() {
+        GameConnection server = new GameConnection();
+        server.startServer();
+
+        /*GameConnection client = new GameConnection();
+        client.startClient();
+
+        ChatMessage mess        = new ChatMessage();
+        mess.message            = "ESSA É A MENSAGEM DO CHAT...";
+        GameProtocol prot       = new GameProtocol(CommunicationType.CHAT, null, mess);
+
+        client.sendPackage(prot);*/
+        //server.sendPackage(prot);
     }
 
 
