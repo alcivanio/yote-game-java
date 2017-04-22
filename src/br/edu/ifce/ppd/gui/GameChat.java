@@ -1,5 +1,6 @@
 package br.edu.ifce.ppd.gui;
 
+import br.edu.ifce.ppd.models.GameChatElement;
 import br.edu.ifce.ppd.util.MyColors;
 import br.edu.ifce.ppd.util.MyFonts;
 
@@ -18,7 +19,7 @@ import java.util.ArrayList;
  */
 public class GameChat {
 
-    String SEND_FIELD_PLACEHOLDER   = "Escrever mensagem";
+    public final String SEND_FIELD_PLACEHOLDER   = "Escrever mensagem";
 
     public JPanel chatPanel;
     private JPanel messagesPanel;
@@ -52,13 +53,13 @@ public class GameChat {
 
 
 
-        GameChatElement el = new GameChatElement(false, "TEXTO EXEMPLO");
+        /*GameChatElement el = new GameChatElement(false, "TEXTO EXEMPLO");
         addNewMessage(el);
         GameChatElement el2 = new GameChatElement(true, "TEXTO EXEMPLO");
         addNewMessage(el2);
         addNewMessage(el2);
         addNewMessage(el2);
-        addNewMessage(el2);
+        addNewMessage(el2);*/
 
     }
 
@@ -158,6 +159,8 @@ public class GameChat {
         int height  = 61;
         int mHeight = 1000000;
 
+        if (element.text == SEND_FIELD_PLACEHOLDER) {return;}
+
         Color cColor = element.fromCurrentUser ? MyColors.blue : MyColors.eee;
         Color fColor = element.fromCurrentUser ? Color.white : MyColors.two;
         ComponentOrientation orientation    = element.fromCurrentUser ? ComponentOrientation.RIGHT_TO_LEFT : ComponentOrientation.LEFT_TO_RIGHT;
@@ -172,7 +175,7 @@ public class GameChat {
         tArea.setForeground(fColor);
 
         tArea.setComponentOrientation(orientation);
-        tArea.setText("Um bom texto para adicionar algum conteúdo para essa parte da view :)~");
+        tArea.setText(element.text);
 
         tArea.setLineWrap(true);
         tArea.setWrapStyleWord(true);
@@ -199,19 +202,4 @@ public class GameChat {
 
 
 
-class GameChatElement {
 
-    boolean fromCurrentUser;
-    String  text;
-    JPanel  elementPanel;
-    JTextArea textLabel;
-
-    public GameChatElement(boolean fromCurrentUser, String text) {
-        this.fromCurrentUser    = fromCurrentUser;
-        this.text               = text;
-    }
-
-    private void createElement() {
-
-    }
-}

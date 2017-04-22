@@ -1,5 +1,7 @@
 package br.edu.ifce.ppd.connection;
 
+import br.edu.ifce.ppd.middle.MiddleController;
+
 import java.io.*;
 import java.net.*;
 
@@ -7,35 +9,37 @@ import java.net.*;
  * Created by alcivanio on 17/04/17.
  */
 public class GameConnection implements Runnable {
+    private static final int SERVER_PORT = 3393;
 
-    int serverPort = 3393;
-    InetAddress serverName;
-    DatagramSocket socket;
+    MiddleController middleController;
 
-    //these are some server tools. We'll need just one instance of these things, so its cheapear to create it outside a method.
-    byte[] serverBuffer;
-    DatagramPacket serverPacket;
+    ConnectionType  type;
+    InetAddress     serverName;
+    Socket          socket;
+    ServerSocket    serverSocket;
+    byte[]          bufferInfos;
 
 
+    public GameConnection(ConnectionType type, MiddleController middleController) {
+        this.type = type;
+        switch (type) {
+            case CLIENT:
+                startClient();
+            case SERVER:
+                startServer();
+        }
+        this.middleController = middleController;
+    }
 
     public void startClient() {
         initClientElements();
         initClientSocket();
+        Thread serverThread = new Thread(this);
+        serverThread.start();
     }
 
 
     public void startServer() {
-
-        /*try {
-            ServerSocket sSocket = new ServerSocket(serverPort);
-            while (true) {
-                Socket socket                   = sSocket.accept();
-                InputStreamReader inputStream   = new InputStreamReader(socket.getInputStream());
-                BufferedReader bufferClient     = new BufferedReader(inputStream);
-            }
-        }
-
-        catch(Exception e){}*/
 
         initServerElements();
         initServerSocket();
@@ -57,11 +61,11 @@ public class GameConnection implements Runnable {
             serverName = InetAddress.getByName("localhost");
         }
         catch(Exception e) {e.printStackTrace();}
+        bufferInfos = new byte[5000];
     }
 
     private void initServerElements() {
-        serverBuffer = new byte[5000];
-        serverPacket = new DatagramPacket(serverBuffer, serverBuffer.length);
+        bufferInfos = new byte[5000];
     }
 
 
@@ -73,13 +77,14 @@ public class GameConnection implements Runnable {
     */
     private void initClientSocket() {
         try {
-            socket = new DatagramSocket();
+            socket = new Socket(serverName, SERVER_PORT);
         } catch(Exception e){}
     }
 
     private void initServerSocket() {
         try {
-            socket = new DatagramSocket(serverPort);
+            serverSocket    = new ServerSocket(SERVER_PORT);
+            socket          = serverSocket.accept();
         } catch(Exception e) {}
     }
 
@@ -91,46 +96,49 @@ public class GameConnection implements Runnable {
     STEP 3:
     Here we're going to send OR receive a content from the server.
     */
-    private void receivePackets() {
+    private void serverReceivePackets() {
         try {
             while(true) {
-                System.out.println("Fecha recebimento");
-                socket.receive(serverPacket);
+                System.out.println("SERVIDOR ESPERANDO");
 
-                System.out.println("Fecha recebimento");
-                int bytesSize = serverPacket.getLength();
-                ByteArrayInputStream byteInput = new ByteArrayInputStream(serverBuffer);
-                BufferedInputStream bufferedInput = new BufferedInputStream(byteInput);
-                ObjectInputStream objInput = new ObjectInputStream(bufferedInput);
-                GameProtocol prot = (GameProtocol) objInput.readObject();
-                objInput.close();
+                DataInputStream inputStream = new DataInputStream(socket.getInputStream());
+                inputStream.read(bufferInfos);
+                GameProtocol receivedInfo   = GameProtocol.fromBytes(bufferInfos);
+                middleController.receivedProtocol(receivedInfo);
             }
-        }catch(Exception e){}
+        }
+        catch(Exception e){e.printStackTrace();}
+    }
+
+    private void serverSendMessage() {
 
     }
 
-    public void pr(){
-        System.out.print("ENVIOU");
+    private void clientReceivePackets() {
+        try {
+            while (true) {
+                System.out.println("CLIENTE ESPERANDO");
+                DataInputStream input = new DataInputStream(socket.getInputStream());
+                input.read(bufferInfos);
+                GameProtocol receivedInfo = GameProtocol.fromBytes(bufferInfos);
+                middleController.receivedProtocol(receivedInfo);
+
+            }
+        }
+        catch (Exception e){e.printStackTrace();}
     }
 
 
     public void sendPackage(GameProtocol prot) {
-
-        //getting the object bytes
         byte[] protBytes = prot.getThisBytesArray();
 
-        //and then we just create the socket and send it!
-        DatagramPacket packet = new DatagramPacket(protBytes, protBytes.length, serverName, serverPort);
-
-        /* We'll try to send the packet to the server, and if it fails we show a message.
-        But don't worry, everything will be ok. */
         try {
-            socket.send(packet);
+            DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
+            outputStream.write(protBytes);
         }catch(Exception e){
             System.out.println("Erro ao enviar pacote ao servidor.\n");
             e.printStackTrace();
         }
-
     }
 
 
@@ -140,25 +148,14 @@ public class GameConnection implements Runnable {
 
     @Override
     public void run() {
-        receivePackets();
+
+        switch(type) {
+            case SERVER:
+                serverReceivePackets();
+            case CLIENT:
+                clientReceivePackets();
+        }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

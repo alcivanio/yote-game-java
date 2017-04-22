@@ -6,6 +6,11 @@ import java.io.Serializable;
  * Created by alcivanio on 17/04/17.
  */
 public class GameMovePosition implements Serializable{
-    int posX;
-    int posY;
+    public int posX;
+    public int posY;
+
+    public GameMovePosition(int posX, int posY) {
+        this.posX = posX;
+        this.posY = posY;
+    }
 }

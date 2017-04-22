@@ -1,9 +1,6 @@
 package br.edu.ifce.ppd.connection;
 
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.*;
 
 /**
  * Created by alcivanio on 17/04/17.
@@ -38,6 +35,23 @@ public class GameProtocol implements Serializable{
         catch(Exception e){
             e.printStackTrace();
         }
+        return null;
+    }
+
+    static GameProtocol fromBytes(byte[] buffer) {
+        try {
+            int bytesSize                       = buffer.length;
+            ByteArrayInputStream byteInput      = new ByteArrayInputStream(buffer);
+            BufferedInputStream bufferedInput   = new BufferedInputStream(byteInput);
+            ObjectInputStream objInput          = new ObjectInputStream(bufferedInput);
+            GameProtocol receivedInfo           = (GameProtocol) objInput.readObject();
+
+            objInput.close();
+            return receivedInfo;
+        }
+        //printing the error. Ok, I just hope it never happens!
+        catch(Exception e) { e.printStackTrace(); }
+
         return null;
     }
 }

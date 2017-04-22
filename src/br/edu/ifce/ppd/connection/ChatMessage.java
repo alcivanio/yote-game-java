@@ -1,5 +1,7 @@
 package br.edu.ifce.ppd.connection;
 
+import br.edu.ifce.ppd.models.User;
+
 import java.io.Serializable;
 
 /**
@@ -7,4 +9,5 @@ import java.io.Serializable;
  */
 public class ChatMessage implements Serializable{
     public String message;
+    public User user;
 }

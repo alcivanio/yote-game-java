@@ -1,9 +1,14 @@
 package br.edu.ifce.ppd.gui;
 
+import br.edu.ifce.ppd.connection.GameMovePosition;
+import br.edu.ifce.ppd.middle.MiddleController;
 import br.edu.ifce.ppd.util.MyColors;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.geom.Rectangle2D;
 
 /**
@@ -11,7 +16,9 @@ import java.awt.geom.Rectangle2D;
  */
 public class GameArea {
 
-    JPanel gamePanel;
+    public GameCanvas       gameCanvas;
+    public JPanel           gamePanel;
+    public MiddleController middleController;
 
 
 
@@ -26,40 +33,42 @@ public class GameArea {
         gamePanel.setBackground(Color.white);
         gamePanel.setLayout(null);
 
-        GameCanvas canvas = new GameCanvas();
-        canvas.setBounds(0, 0, width, height);
+        gameCanvas = new GameCanvas();
+        gameCanvas.setBounds(0, 0, width, height);
 
-        gamePanel.add(canvas);
+        gamePanel.add(gameCanvas);
     }
 
 
-}
+    public void setClickEventsOnTable() {
 
-class GameCanvas extends Canvas {
-
-    public GameCanvas() {
-        System.out.print("INICIALIZADOR");
-    }
-
-    @Override
-    public void paint(Graphics g) {
-
-        int horizontalNumber = 5;
-        int verticalNumber = 6;
-
-        int strokeSize  = 6;
-        int rectWidth   = 59;
-        int rectHeight  = 67;
-
-        Graphics2D g2 = (Graphics2D)g;
-        g2.setStroke(new BasicStroke(strokeSize));
-        g2.setColor(MyColors.ddd);
-
-        for(int i=0; i<verticalNumber; i++) {
-            for(int j=0; j<horizontalNumber; j++) {
-                g2.drawRect(j*rectWidth+(strokeSize/2), i*rectHeight+(strokeSize/2), rectWidth, rectHeight);
+        gameCanvas.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                middleController.onMouseClickOnCanvas(e);
             }
-        }
 
+            @Override
+            public void mousePressed(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+
+            }
+        });
     }
+
 }
+
