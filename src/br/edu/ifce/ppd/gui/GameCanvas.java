@@ -55,6 +55,7 @@ public class GameCanvas extends Canvas {
         for(int i=0; i<verticalNumber; i++){
             for(int j=0; j<horizontalNumber; j++) {
                 gamePositions[j][i] = 0;
+                if (i==2 && j == 2){gamePositions[j][i] = 2;}//REMOVE THIS GUY
             }
         }
     }
@@ -67,6 +68,17 @@ public class GameCanvas extends Canvas {
         GameMovePosition movePos = new GameMovePosition(posX,posY);
         return movePos;
 
+    }
+
+    public int[][] opposeArray(int[][] gameScene) {
+        for(int i=0; i<verticalNumber; i++){
+            for(int j=0; j<horizontalNumber; j++) {
+                if (gameScene[j][i] == 1) {gameScene[j][i] = 2;}
+                if (gameScene[j][i] == 2) {gameScene[j][i] = 1;}
+            }
+        }
+
+        return gameScene;
     }
 
 

@@ -14,14 +14,14 @@ public class GameHeader {
 
     JPanel headerPanel;//the main header panel!
 
-    JPanel turnColor;
-    JLabel turnLabel;
-    JLabel usedLabel;
-    JLabel descUserLabel;
-    JLabel capturedsLabel;
-    JLabel descCapturedsLabel;
-    JLabel restartLabel;
-    JLabel giveupLabel;
+    public JPanel turnColor;
+    public JLabel turnLabel;
+    public JLabel usedLabel;
+    public JLabel descUserLabel;
+    public JLabel capturedsLabel;
+    public JLabel descCapturedsLabel;
+    public JLabel restartLabel;
+    public JLabel giveupLabel;
 
     private int topTextBaseY    = 19;
     private int bottomTextBaseY = 56;

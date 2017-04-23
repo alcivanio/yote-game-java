@@ -8,14 +8,14 @@ import java.io.*;
 public class GameProtocol implements Serializable{
 
     public CommunicationType   communicationType;
-    public GameMovePosition    gMovePosition;
     public ChatMessage         chatMessage;
+    public GameTableState      gameTableState;
 
 
-    public GameProtocol(CommunicationType cType, GameMovePosition gPos, ChatMessage cMes) {
+    public GameProtocol(CommunicationType cType, GameTableState tableState, ChatMessage cMes) {
         communicationType   = cType;
-        gMovePosition       = gPos;
         chatMessage         = cMes;
+        gameTableState      = tableState;
     }
 
     public byte[] getThisBytesArray() {
