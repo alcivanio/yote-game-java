@@ -167,7 +167,7 @@ public class MiddleController {
         GameProtocol prot = new GameProtocol(CommunicationType.COMMAND,null,null, gameCommand);
         gameConnection.sendPackage(prot);
 
-        if(gameCommand.commandCode == GameCommandType.ACCEPT_RESTART) {restartGame();}
+        if(gameCommand.commandCode == GameCommandType.ACCEPT_RESTART) {restartGame(); }
     }
 
     private void restartAccepted() {
@@ -196,6 +196,7 @@ public class MiddleController {
         gameArea.myState.restart();
         gameArea.gameCanvas.repaint();
         isMyTurn = connectionType == ConnectionType.SERVER;
+        uiUpdate();
     }
 
 
@@ -251,6 +252,10 @@ public class MiddleController {
 
     public void setChoosedToAddNewPiece() {
         if(!checkCanChangeAndAlert()) { return; }
+        if (gameArea.myState.piecesInBucket < 1) {
+            showMessage("Você já usou todas as peças");
+            return;
+        }
         mouseState = MouseStateMiddle.CHOOSED_TO_ADD;
     }
 
@@ -323,6 +328,8 @@ public class MiddleController {
         //updating the last clicked space
         lastClickedPos.posX = pos.posX;
         lastClickedPos.posY = pos.posY;
+
+        checkForWinning();
     }
 
     public String checkForErrosInChoosePlace(GameMovePosition pos) {
@@ -433,6 +440,18 @@ public class MiddleController {
         });
     }
 
+
+    private void checkForWinning() {
+        if (gameArea.myState.tookFromOpponent == 12) {
+            showMessage("Você ganhou a partida!");
+
+            GameCommand cmd     = new GameCommand(GameCommandType.LOSE_GAME);
+            GameProtocol prot   = new GameProtocol(CommunicationType.COMMAND, null,null, cmd);
+            gameConnection.sendPackage(prot);
+
+            restartGame();
+        }
+    }
 
 
     private void sendRestartRequest() {
