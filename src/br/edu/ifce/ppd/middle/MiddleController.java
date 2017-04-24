@@ -3,7 +3,6 @@ package br.edu.ifce.ppd.middle;
 import br.edu.ifce.ppd.connection.*;
 import br.edu.ifce.ppd.gui.GameArea;
 import br.edu.ifce.ppd.gui.GameChat;
-import br.edu.ifce.ppd.gui.GameGUI;
 import br.edu.ifce.ppd.gui.GameHeader;
 import br.edu.ifce.ppd.models.GameChatElement;
 import br.edu.ifce.ppd.models.User;
@@ -25,8 +24,9 @@ public class MiddleController {
     GameConnection  gameConnection;
 
     //aux
-    MouseStateMiddle mouseState;
-    GameMovePosition lastClickedPos;
+    MouseStateMiddle    mouseState;
+    GameMovePosition    lastClickedPos;
+    boolean             isMyTurn = false;
 
 
     public MiddleController(User            user,
@@ -43,12 +43,15 @@ public class MiddleController {
         this.mouseState     = MouseStateMiddle.FREE;
         this.lastClickedPos = new GameMovePosition(0,0);
         this.gameConnection = new GameConnection(connectionType, this);
+        this.isMyTurn       = connectionType == ConnectionType.SERVER;
     }
 
     public void setGeneralConfigurations() {
         addSendMessageListener();
         setClickEventsOnTable();
         setClickCircleTurn();
+        addCommandsListener();
+        uiUpdate();
     }
 
 
@@ -69,7 +72,7 @@ public class MiddleController {
         ChatMessage mess        = new ChatMessage();
         mess.message            = message;
         mess.user               = user;
-        GameProtocol prot       = new GameProtocol(CommunicationType.CHAT, null, mess);
+        GameProtocol prot       = new GameProtocol(CommunicationType.CHAT, null, mess, null);
 
         gameConnection.sendPackage(prot);
         didReceiveMessage(prot);
@@ -83,8 +86,13 @@ public class MiddleController {
         switch (protocol.communicationType) {
             case CHAT:
                 didReceiveMessage(protocol);
+                break;
             case MOVE:
                 didReceiveMove(protocol);
+                break;
+            case COMMAND:
+                didReceiveCommand(protocol);
+                break;
         }
     }
 
@@ -106,14 +114,90 @@ public class MiddleController {
     }
 
     private void didReceiveMove(final GameProtocol protocol) {
+        isMyTurn = !isMyTurn;
         EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
-                gameArea.gameCanvas.gamePositions = protocol.gameTableState.table;
+                gameArea.gameCanvas.gamePositions = gameArea.gameCanvas.opposeArray(protocol.gameTableState.table);
                 gameArea.gameCanvas.repaint();
+                uiUpdate();
             }
         });
     }
+
+    private void didReceiveCommand(GameProtocol prot) {
+        switch (prot.gameCommand.commandCode) {
+            case LOSE_GAME:
+                showMessage("lose game");
+                break;
+            case ASK_RESTART:
+                askedToRestartGame();
+                break;
+            case DENY_RESTART:
+                restartDenied();
+                break;
+            case ACCEPT_RESTART:
+                restartAccepted();
+                break;
+        }
+    }
+
+
+    /*
+        An area to commands receiveds.
+    */
+
+    private void askedToRestartGame() {
+        System.out.println("CHAMEI");
+
+        final String PLATFORM_MESSAGE   = "Oponente pediu pra reiniciar o jogo. Você aceita?";
+        final String PLATFORM_TITLE     = "Pedido para reiniciar";
+        final String[] OPTIONS          = new String[] {"Reiniciar", "Não"};
+        int acceptRestart = -1;
+
+        while (acceptRestart == -1) {
+            int response = JOptionPane.showOptionDialog(null,
+                    PLATFORM_MESSAGE, PLATFORM_TITLE,
+                    JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null,
+                    OPTIONS, OPTIONS[0]);
+
+            acceptRestart = response;
+        }
+        GameCommand gameCommand = new GameCommand(acceptRestart == 0 ? GameCommandType.ACCEPT_RESTART : GameCommandType.DENY_RESTART);
+        GameProtocol prot = new GameProtocol(CommunicationType.COMMAND,null,null, gameCommand);
+        gameConnection.sendPackage(prot);
+
+        if(gameCommand.commandCode == GameCommandType.ACCEPT_RESTART) {restartGame();}
+    }
+
+    private void restartAccepted() {
+        isMyTurn = true;
+        showMessage("O oponente aceitou seu pedido de reiniciar jogo");
+        restartGame();
+    }
+
+    private void restartDenied() {
+        isMyTurn = true;
+        showMessage("O oponente não aceitou seu pedido de reiniciar jogo");
+    }
+
+    private void didLoseGame() {
+        showMessage("VOCÊ PERDEU O JOGO :/ \nMELHORE!!!!");
+        restartGame();
+    }
+
+    private void didWinGame() {
+        showMessage("VOCÊ GANHOU O JOGO :/ \nTOP D+!!!!");
+        restartGame();
+    }
+
+    private void restartGame() {
+        gameArea.gameCanvas.startCleanArray();//restart the array positions.
+        gameArea.myState.restart();
+        gameArea.gameCanvas.repaint();
+        isMyTurn = connectionType == ConnectionType.SERVER;
+    }
+
 
 
 
@@ -166,10 +250,13 @@ public class MiddleController {
     }
 
     public void setChoosedToAddNewPiece() {
+        if(!checkCanChangeAndAlert()) { return; }
         mouseState = MouseStateMiddle.CHOOSED_TO_ADD;
     }
 
     public void onMouseClickOnCanvas(MouseEvent e) {
+        if(!checkCanChangeAndAlert()) { return; }
+
         GameMovePosition pos = gameArea.gameCanvas.getPositionBasedOnClick(e);
         boolean jumpChoosedToMove = false;
 
@@ -218,7 +305,10 @@ public class MiddleController {
 
         if (mouseState == MouseStateMiddle.CHOOSED_TO_ADD) {
             if(gameArea.gameCanvas.gamePositions[pos.posX][pos.posY] == 0) {
-                gameArea.gameCanvas.gamePositions[pos.posX][pos.posY] = 1;
+                gameArea.addPieceInTable(pos.posX, pos.posY);
+                //gameArea.gameCanvas.gamePositions[pos.posX][pos.posY] = 1;
+                //gameArea.myState.piecesInBucket--;
+
                 sendTableStateToOtherUser();
                 mouseState = MouseStateMiddle.FREE;
             }
@@ -252,7 +342,9 @@ public class MiddleController {
         //if this guy isnt a simple move, we have to call a method to save a removement of other user piece.
         else {
             if (lastClickedPos.isDoubleMove(np) && lastClickedPos.isAllowedDoubleMove(np, gameArea.gameCanvas.gamePositions)) {
-                showMessage("Deu tudo certo...");
+
+                GameMovePosition removedPos = lastClickedPos.getMiddlePointForDoubleMove(np);
+                gameArea.getOpponentPiece(removedPos.posX, removedPos.posY);
                 return true;
             }
             else {
@@ -264,10 +356,15 @@ public class MiddleController {
     }
 
     public void sendTableStateToOtherUser() {
+        isMyTurn = !isMyTurn;
         GameTableState tableState   = new GameTableState(gameArea.gameCanvas.gamePositions);
-        GameProtocol prot           = new GameProtocol(CommunicationType.MOVE, tableState, null);
+        tableState.myself   = gameArea.myState;
+        tableState.opponent = gameArea.opponentState;
 
+        GameProtocol prot   = new GameProtocol(CommunicationType.MOVE, tableState, null, null);
         gameConnection.sendPackage(prot);
+
+        uiUpdate();
     }
 
     public void checkIfItsGettingOtherUserPiece(GameMovePosition newPos) {
@@ -282,7 +379,69 @@ public class MiddleController {
         System.out.println(message);
     }
 
+    private boolean checkCanChangeAndAlert() {
+        if(!isMyTurn) { showMessage("Não é a sua vez!"); }
+        return isMyTurn;
+    }
 
+
+
+
+
+
+    /*
+        Updates for the screen - some methods to show user infos
+    */
+
+    public void uiUpdate() {
+        uiuIsMyTurn();
+        uiuUsedPieces();
+        uiuCaptured();
+    }
+
+    private void uiuIsMyTurn() {
+        gameHeader.turnLabel.setText(isMyTurn ? "sua vez" : "vez do amigo");
+    }
+    private void uiuUsedPieces() {
+        int useds = 12 - gameArea.myState.piecesInBucket;
+        gameHeader.usedLabel.setText("" + useds);
+    }
+    private void uiuCaptured() {
+        gameHeader.capturedsLabel.setText("" + gameArea.myState.tookFromOpponent);
+    }
+
+
+
+
+    /*
+        Commands listener...
+    */
+    private void addCommandsListener() {
+        gameHeader.restartLabel.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                sendRestartRequest();
+            }
+            @Override
+            public void mousePressed(MouseEvent e) {}
+            @Override
+            public void mouseReleased(MouseEvent e) {}
+            @Override
+            public void mouseEntered(MouseEvent e) {}
+            @Override
+            public void mouseExited(MouseEvent e) {}
+        });
+    }
+
+
+
+    private void sendRestartRequest() {
+        isMyTurn                = false;
+        GameCommand gCommand    = new GameCommand(GameCommandType.ASK_RESTART);
+        GameProtocol prot       = new GameProtocol(CommunicationType.COMMAND, null, null, gCommand);
+
+        gameConnection.sendPackage(prot);
+    }
 
 
 

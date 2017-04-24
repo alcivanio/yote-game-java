@@ -10,12 +10,14 @@ public class GameProtocol implements Serializable{
     public CommunicationType   communicationType;
     public ChatMessage         chatMessage;
     public GameTableState      gameTableState;
+    public GameCommand         gameCommand;
 
 
-    public GameProtocol(CommunicationType cType, GameTableState tableState, ChatMessage cMes) {
+    public GameProtocol(CommunicationType cType, GameTableState tableState, ChatMessage cMes, GameCommand command) {
         communicationType   = cType;
         chatMessage         = cMes;
         gameTableState      = tableState;
+        gameCommand         = command;
     }
 
     public byte[] getThisBytesArray() {

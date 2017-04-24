@@ -17,7 +17,7 @@ public class GameCanvas extends Canvas {
     int rectHeight  = 67;
 
     public GameCanvas() {
-        startPositionsArray();
+        startCleanArray();
     }
 
     @Override
@@ -51,11 +51,10 @@ public class GameCanvas extends Canvas {
         return userType == 1 ? MyColors.blue : MyColors.ddd;
     }
 
-    public void startPositionsArray() {
+    public void startCleanArray() {
         for(int i=0; i<verticalNumber; i++){
             for(int j=0; j<horizontalNumber; j++) {
                 gamePositions[j][i] = 0;
-                if (i==2 && j == 2){gamePositions[j][i] = 2;}//REMOVE THIS GUY
             }
         }
     }
@@ -71,14 +70,19 @@ public class GameCanvas extends Canvas {
     }
 
     public int[][] opposeArray(int[][] gameScene) {
+        int[][]finalArray = gameScene;
         for(int i=0; i<verticalNumber; i++){
             for(int j=0; j<horizontalNumber; j++) {
-                if (gameScene[j][i] == 1) {gameScene[j][i] = 2;}
-                if (gameScene[j][i] == 2) {gameScene[j][i] = 1;}
+                if (finalArray[j][i] == 1) {
+                    finalArray[j][i] = 2;
+                }
+                else if (finalArray[j][i] == 2) {
+                    finalArray[j][i] = 1;
+                }
             }
         }
 
-        return gameScene;
+        return finalArray;
     }
 
 

@@ -1,6 +1,7 @@
 package br.edu.ifce.ppd.gui;
 
 import br.edu.ifce.ppd.connection.GameMovePosition;
+import br.edu.ifce.ppd.connection.GameUserState;
 import br.edu.ifce.ppd.middle.MiddleController;
 import br.edu.ifce.ppd.util.MyColors;
 
@@ -19,6 +20,8 @@ public class GameArea {
     public GameCanvas       gameCanvas;
     public JPanel           gamePanel;
     public MiddleController middleController;
+    public GameUserState    opponentState;
+    public GameUserState    myState;
 
 
 
@@ -27,6 +30,9 @@ public class GameArea {
         int posY    = 103;
         int width   = 301;
         int height  = 407;
+
+        opponentState   = new GameUserState();
+        myState         = new GameUserState();
 
         gamePanel = new JPanel();
         gamePanel.setBounds(posX, posY, width, height);
@@ -68,6 +74,16 @@ public class GameArea {
 
             }
         });
+    }
+
+    public void getOpponentPiece(int posX, int posY) {
+        gameCanvas.gamePositions[posX][posY] = 0;
+        myState.tookFromOpponent++;
+    }
+
+    public void addPieceInTable(int posX, int posY) {
+        gameCanvas.gamePositions[posX][posY] = 1;
+        myState.piecesInBucket--;
     }
 
 }

@@ -7,5 +7,5 @@ import java.io.Serializable;
  */
 public enum CommunicationType implements Serializable{
 
-    CHAT, MOVE;
+    CHAT, MOVE, COMMAND;
 }

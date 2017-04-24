@@ -7,6 +7,8 @@ import java.io.Serializable;
  */
 public class GameTableState implements Serializable {
     public int[][] table;
+    public GameUserState opponent;
+    public GameUserState myself;
 
     public GameTableState(int[][] table) {
         this.table = table;
