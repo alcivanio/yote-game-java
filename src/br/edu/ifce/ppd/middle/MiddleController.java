@@ -128,7 +128,7 @@ public class MiddleController {
     private void didReceiveCommand(GameProtocol prot) {
         switch (prot.gameCommand.commandCode) {
             case LOSE_GAME:
-                showMessage("lose game");
+                didLoseGame();
                 break;
             case ASK_RESTART:
                 askedToRestartGame();
@@ -443,7 +443,7 @@ public class MiddleController {
 
     private void checkForWinning() {
         if (gameArea.myState.tookFromOpponent == 12) {
-            showMessage("Você ganhou a partida!");
+            didWinGame();
 
             GameCommand cmd     = new GameCommand(GameCommandType.LOSE_GAME);
             GameProtocol prot   = new GameProtocol(CommunicationType.COMMAND, null,null, cmd);
