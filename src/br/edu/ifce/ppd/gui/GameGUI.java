@@ -43,6 +43,7 @@ public class GameGUI {
         frame.setVisible(true);
 
         testesSocket();
+        testesRMI();
 
     }
 
@@ -114,6 +115,12 @@ public class GameGUI {
         client.sendPackage(prot);
         //server.sendPackage(prot);*/
     }
+
+    static void testesRMI() {
+
+
+    }
+
 
     private void routineUserType() {
 
