@@ -1,6 +1,8 @@
 package br.edu.ifce.ppd.gui;
 
 import br.edu.ifce.ppd.connection.*;
+import br.edu.ifce.ppd.connection.rmi.RMICenter;
+import br.edu.ifce.ppd.connection.rmi.RMIRegister;
 import br.edu.ifce.ppd.middle.MiddleController;
 import br.edu.ifce.ppd.models.User;
 import br.edu.ifce.ppd.util.MyColors;
@@ -34,7 +36,7 @@ public class GameGUI {
 
 
     public static void main(String[] args) {
-
+        testesRMI();
         JFrame frame = new JFrame("App");
         frame.setContentPane(new GameGUI().mainPanel);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -117,8 +119,14 @@ public class GameGUI {
     }
 
     static void testesRMI() {
+        System.out.println("ABRIU");
+        RMICenter center1 = new RMICenter(0);
+        RMICenter center2 = new RMICenter(1);
 
+        center1.teste("Cliente 0");
+        center2.teste("Cliente 1");
 
+        int a = 1;
     }
 
 
@@ -164,12 +172,9 @@ public class GameGUI {
                 stringIPAddress = null;
                 e.printStackTrace();
             }
-
-
         }
-
-
     }
+
 
 
 
