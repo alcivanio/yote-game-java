@@ -7,6 +7,7 @@ import java.rmi.RemoteException;
  */
 public interface GamePatternComunication extends Remote {
 
-    void updateTable(int[][] positions) throws  RemoteException;;
-    void teste(String message) throws RemoteException;;
+    void addMessage(ChatMessage cMessage) throws RemoteException;
+    void executeCommand(GameCommandType command) throws RemoteException;
+    void updateTable(GameTableState tableState) throws RemoteException;
 }

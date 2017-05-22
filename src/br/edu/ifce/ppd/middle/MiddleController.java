@@ -1,11 +1,13 @@
 package br.edu.ifce.ppd.middle;
 
 import br.edu.ifce.ppd.connection.*;
+import br.edu.ifce.ppd.connection.rmi.RMICenter;
 import br.edu.ifce.ppd.gui.GameArea;
 import br.edu.ifce.ppd.gui.GameChat;
 import br.edu.ifce.ppd.gui.GameHeader;
 import br.edu.ifce.ppd.models.GameChatElement;
 import br.edu.ifce.ppd.models.User;
+import com.sun.codemodel.internal.JOp;
 
 import javax.swing.*;
 import java.awt.*;
@@ -17,11 +19,11 @@ import java.awt.event.*;
 public class MiddleController {
 
     User            user;
-    ConnectionType  connectionType;
     GameHeader      gameHeader;
     GameArea        gameArea;
     GameChat        gameChat;
-    GameConnection  gameConnection;
+    RMICenter       rmiCenter;
+    Integer         computerId;
 
     //aux
     MouseStateMiddle    mouseState;
@@ -30,24 +32,24 @@ public class MiddleController {
 
 
     public MiddleController(User            user,
-                            ConnectionType  connectionType,
+                            Integer         computerId,
                             GameHeader      gameHeader,
                             GameArea        gameArea,
                             GameChat        gameChat) {
 
         this.user           = user;
-        this.connectionType = connectionType;
+        this.computerId     = computerId;
         this.gameHeader     = gameHeader;
         this.gameArea       = gameArea;
         this.gameChat       = gameChat;
         this.mouseState     = MouseStateMiddle.FREE;
         this.lastClickedPos = new GameMovePosition(0,0);
-        this.gameConnection = new GameConnection(connectionType, this);
-        this.isMyTurn       = connectionType == ConnectionType.SERVER;
+        this.rmiCenter      = new RMICenter(computerId, this);
+        this.isMyTurn       = computerId == 0;
     }
 
     public void setGeneralConfigurations() {
-        addSendMessageListener();
+        addMessageListener();
         setClickEventsOnTable();
         setClickCircleTurn();
         addCommandsListener();
@@ -58,24 +60,23 @@ public class MiddleController {
     /*
         - Send message methods.
     * */
-    private void addSendMessageListener() {
+    private void addMessageListener() {
         gameChat.sendButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                trySendMessage();
+                onFinishMessageClick();
             }
         });
     }
 
-    private void trySendMessage() {
+    private void onFinishMessageClick() {
         String message          = gameChat.sendField.getText();
         ChatMessage mess        = new ChatMessage();
         mess.message            = message;
         mess.user               = user;
-        GameProtocol prot       = new GameProtocol(CommunicationType.CHAT, null, mess, null);
 
-        gameConnection.sendPackage(prot);
-        didReceiveMessage(prot);
+        rmiCenter.addMessage(mess);
+        updateMessageOnScreen(mess);
 
         gameChat.sendField.setText(gameChat.SEND_FIELD_PLACEHOLDER);
     }
@@ -85,22 +86,22 @@ public class MiddleController {
     public void receivedProtocol(GameProtocol protocol) {
         switch (protocol.communicationType) {
             case CHAT:
-                didReceiveMessage(protocol);
+                //didReceiveMessage(protocol);
                 break;
             case MOVE:
-                didReceiveMove(protocol);
+                //didReceiveMove(protocol);
                 break;
             case COMMAND:
-                didReceiveCommand(protocol);
+                //didReceiveCommand(protocol);
                 break;
         }
     }
 
-    private void didReceiveMessage(GameProtocol protocol) {
+    public void updateMessageOnScreen(ChatMessage message) {
 
-        boolean isFromCurrentUser   = protocol.chatMessage.user.identifier == user.identifier;
-        String userMessageId        = protocol.chatMessage.user.identifier;
-        String messageText          = protocol.chatMessage.message;
+        boolean isFromCurrentUser   = message.user.identifier == user.identifier;
+        String userMessageId        = message.user.identifier;
+        String messageText          = message.message;
         final GameChatElement chatElement = new GameChatElement(userMessageId, messageText);
         chatElement.fromCurrentUser = isFromCurrentUser;
 
@@ -113,20 +114,20 @@ public class MiddleController {
         });
     }
 
-    private void didReceiveMove(final GameProtocol protocol) {
+    public void updateTableState(final GameTableState tableState) {
         isMyTurn = !isMyTurn;
         EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
-                gameArea.gameCanvas.gamePositions = gameArea.gameCanvas.opposeArray(protocol.gameTableState.table);
+                gameArea.gameCanvas.gamePositions = gameArea.gameCanvas.opposeArray(tableState.table);
                 gameArea.gameCanvas.repaint();
                 uiUpdate();
             }
         });
     }
 
-    private void didReceiveCommand(GameProtocol prot) {
-        switch (prot.gameCommand.commandCode) {
+    public void executeCommand(GameCommandType command) {
+        switch (command) {
             case LOSE_GAME:
                 didLoseGame();
                 break;
@@ -148,7 +149,6 @@ public class MiddleController {
     */
 
     private void askedToRestartGame() {
-        System.out.println("CHAMEI");
 
         final String PLATFORM_MESSAGE   = "Oponente pediu pra reiniciar o jogo. Você aceita?";
         final String PLATFORM_TITLE     = "Pedido para reiniciar";
@@ -163,11 +163,12 @@ public class MiddleController {
 
             acceptRestart = response;
         }
-        GameCommand gameCommand = new GameCommand(acceptRestart == 0 ? GameCommandType.ACCEPT_RESTART : GameCommandType.DENY_RESTART);
-        GameProtocol prot = new GameProtocol(CommunicationType.COMMAND,null,null, gameCommand);
-        gameConnection.sendPackage(prot);
+        GameCommandType command = acceptRestart == 0 ? GameCommandType.ACCEPT_RESTART : GameCommandType.DENY_RESTART;
+        rmiCenter.executeCommand(command);
 
-        if(gameCommand.commandCode == GameCommandType.ACCEPT_RESTART) {restartGame(); }
+        if(command == GameCommandType.ACCEPT_RESTART) {
+            restartGame();
+        }
     }
 
     private void restartAccepted() {
@@ -195,7 +196,7 @@ public class MiddleController {
         gameArea.gameCanvas.startCleanArray();//restart the array positions.
         gameArea.myState.restart();
         gameArea.gameCanvas.repaint();
-        isMyTurn = connectionType == ConnectionType.SERVER;
+        isMyTurn = computerId == 0;
         uiUpdate();
     }
 
@@ -368,23 +369,18 @@ public class MiddleController {
         tableState.myself   = gameArea.myState;
         tableState.opponent = gameArea.opponentState;
 
-        GameProtocol prot   = new GameProtocol(CommunicationType.MOVE, tableState, null, null);
-        gameConnection.sendPackage(prot);
+        rmiCenter.updateTable(tableState);
 
         uiUpdate();
     }
 
-    public void checkIfItsGettingOtherUserPiece(GameMovePosition newPos) {
-
-    }
-
-
 
 
     public void showMessage(String message){
-        JOptionPane.showMessageDialog(null, message, "Alerta",JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(null, message, "Alerta", JOptionPane.INFORMATION_MESSAGE);
         System.out.println(message);
     }
+
 
     private boolean checkCanChangeAndAlert() {
         if(!isMyTurn) { showMessage("Não é a sua vez!"); }
@@ -444,11 +440,7 @@ public class MiddleController {
     private void checkForWinning() {
         if (gameArea.myState.tookFromOpponent == 12) {
             didWinGame();
-
-            GameCommand cmd     = new GameCommand(GameCommandType.LOSE_GAME);
-            GameProtocol prot   = new GameProtocol(CommunicationType.COMMAND, null,null, cmd);
-            gameConnection.sendPackage(prot);
-
+            rmiCenter.executeCommand(GameCommandType.LOSE_GAME);
             restartGame();
         }
     }
@@ -456,10 +448,7 @@ public class MiddleController {
 
     private void sendRestartRequest() {
         isMyTurn                = false;
-        GameCommand gCommand    = new GameCommand(GameCommandType.ASK_RESTART);
-        GameProtocol prot       = new GameProtocol(CommunicationType.COMMAND, null, null, gCommand);
-
-        gameConnection.sendPackage(prot);
+        rmiCenter.executeCommand(GameCommandType.ASK_RESTART);
     }
 
 

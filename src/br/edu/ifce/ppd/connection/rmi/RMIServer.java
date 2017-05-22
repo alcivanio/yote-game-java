@@ -1,6 +1,9 @@
 package br.edu.ifce.ppd.connection.rmi;
 
+import br.edu.ifce.ppd.connection.ChatMessage;
+import br.edu.ifce.ppd.connection.GameCommandType;
 import br.edu.ifce.ppd.connection.GamePatternComunication;
+import br.edu.ifce.ppd.connection.GameTableState;
 
 import java.rmi.Naming;
 import java.rmi.RemoteException;
@@ -15,24 +18,33 @@ public class RMIServer extends UnicastRemoteObject implements GamePatternComunic
     String SERVER_TWO_ID    = "//localhost/server_two";
 
     int serverId = 0;
+    RMICenter rmiCenter;
 
 
-
-    protected RMIServer(int serverId) throws RemoteException {
+    protected RMIServer(int serverId, RMICenter rmiCenter) throws RemoteException {
         super();
-        this.serverId = serverId;
+        this.serverId   = serverId;
+        this.rmiCenter  = rmiCenter;
         registerServer();
         System.out.println("server successfully created.");
     }
 
+
     @Override
-    public void updateTable(int[][] positions) {
-        System.out.print("test - message sent.");
+    public void addMessage(ChatMessage cMessage) {
+        rmiCenter.middleController.updateMessageOnScreen(cMessage);
+        //System.out.println(cMessage.message);
+    }
+
+
+    @Override
+    public void executeCommand(GameCommandType command) throws RemoteException {
+        rmiCenter.middleController.executeCommand(command);
     }
 
     @Override
-    public void teste(String message) {
-        System.out.println("Servidor " + serverId + " recebeu mensagem de " + message);
+    public void updateTable(GameTableState tableState) throws RemoteException {
+        rmiCenter.middleController.updateTableState(tableState);
     }
 
 

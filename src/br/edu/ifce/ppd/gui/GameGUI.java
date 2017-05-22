@@ -16,7 +16,8 @@ import java.net.InetAddress;
  */
 public class GameGUI {
 
-    ConnectionType userType;
+    //ConnectionType userType;
+    Integer computerId = null;
 
     //component variables.
     JPanel      mainPanel;
@@ -36,16 +37,13 @@ public class GameGUI {
 
 
     public static void main(String[] args) {
-        testesRMI();
+
         JFrame frame = new JFrame("App");
         frame.setContentPane(new GameGUI().mainPanel);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(screenSizeWidth, screenSizeHeight);
         frame.setResizable(false);
         frame.setVisible(true);
-
-        testesSocket();
-        testesRMI();
 
     }
 
@@ -72,7 +70,7 @@ public class GameGUI {
     }
 
     private void setConnectionElements() {
-        middleController = new MiddleController(user, userType, gameHeader, gameArea, gameChat);
+        middleController = new MiddleController(user, computerId, gameHeader, gameArea, gameChat);
         middleController.setGeneralConfigurations();
     }
 
@@ -119,19 +117,30 @@ public class GameGUI {
     }
 
     static void testesRMI() {
-        System.out.println("ABRIU");
+        /*System.out.println("ABRIU");
         RMICenter center1 = new RMICenter(0);
         RMICenter center2 = new RMICenter(1);
 
         center1.teste("Cliente 0");
         center2.teste("Cliente 1");
 
-        int a = 1;
+        int a = 1;*/
     }
 
 
     private void routineUserType() {
+        final Integer[] options = {0, 1};
 
+        String comboTitle    = "Conectar";
+        String comboMessage  = "Selecione uma máquina para se conectar.";
+
+        while(computerId == null) {
+            computerId = (Integer) JOptionPane.showInputDialog(null, comboMessage, comboTitle, JOptionPane.PLAIN_MESSAGE, null, options, 0);
+        }
+
+
+
+        /*
         final String PLATFORM_MESSAGE   = "Que tipo de plataforma você será nesse jogo?";
         final String PLATFORM_TITLE     = "Selecione tipo de plataforma";
         final String[] OPTIONS          = new String[] {"Servidor", "Cliente"};
@@ -154,7 +163,7 @@ public class GameGUI {
         userType = connectionType;
         if (connectionType == ConnectionType.CLIENT) {
             routineUserIPAddress();
-        }
+        }*/
     }
 
     private void routineUserIPAddress() {

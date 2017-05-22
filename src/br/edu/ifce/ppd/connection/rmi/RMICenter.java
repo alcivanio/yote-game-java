@@ -1,18 +1,27 @@
 package br.edu.ifce.ppd.connection.rmi;
 
+import br.edu.ifce.ppd.connection.ChatMessage;
+import br.edu.ifce.ppd.connection.GameCommandType;
 import br.edu.ifce.ppd.connection.GamePatternComunication;
+import br.edu.ifce.ppd.connection.GameTableState;
+import br.edu.ifce.ppd.middle.MiddleController;
+
+import java.rmi.RemoteException;
 
 /**
  * Created by alcivanio on 17/05/17.
  */
 public class RMICenter implements GamePatternComunication{
 
-    int         centerID;
-    RMIClient   client;
-    RMIServer   server;
+    int                 centerID;
+    RMIClient           client;
+    RMIServer           server;
+    MiddleController    middleController;
 
-    public RMICenter(int id) {
-        centerID = id;
+
+    public RMICenter(int id, MiddleController middleController) {
+        centerID                = id;
+        this.middleController   = middleController;
         startServer();
     }
 
@@ -23,7 +32,7 @@ public class RMICenter implements GamePatternComunication{
 
     private void startServer() {
         try {
-            server = new RMIServer(centerID);
+            server = new RMIServer(centerID, this);
         }catch (Exception e) { e.printStackTrace(); }
     }
 
@@ -42,15 +51,28 @@ public class RMICenter implements GamePatternComunication{
 
 
     @Override
-    public void updateTable(int[][] positions) {
-        checkForClientInitialization();
+    public void addMessage(ChatMessage cMessage) {
+        try {
+            checkForClientInitialization();
+            client.remote.addMessage(cMessage);
+        }catch(Exception e){ e.printStackTrace(); }
     }
 
     @Override
-    public void teste(String message) {
+    public void executeCommand(GameCommandType command) {
         try {
             checkForClientInitialization();
-            client.remote.teste(message);
+            client.remote.executeCommand(command);
         }catch(Exception e){ e.printStackTrace(); }
     }
+
+    @Override
+    public void updateTable(GameTableState tableState) {
+        try {
+            checkForClientInitialization();
+            client.remote.updateTable(tableState);
+        }catch(Exception e){ e.printStackTrace(); }
+    }
+
+
 }
